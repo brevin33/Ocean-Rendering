@@ -1,24 +1,11 @@
 #version 450
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTex;
 
-// Camera
-layout(binding = 0) uniform cameraInfo{ 
-    mat4 viewproj;
-} camera;
+layout (location = 0) out vec2 TexCoord;
 
-layout(binding = 0) uniform modelInfo{
-    mat4 inModel;
-}model;
-
-// Vertex Data
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
-
-
-// Frag Shader Data
-layout(location = 0) out vec3 fragColor;
-
-void main() {
-    gl_Position = camera.viewproj * mat4(1) * vec4(inPosition, 1.0);
-
-    fragColor = inColor;
+void main()
+{
+    gl_Position = vec4(aPos, 1.0);
+    TexCoord = aTex;
 }

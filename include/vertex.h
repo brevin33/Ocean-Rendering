@@ -5,12 +5,12 @@
 using namespace MZ;
 struct Vertex {
 	glm::vec3 pos;
-	glm::vec3 color;
+	glm::vec2 uv;
 
 	static std::array<VertexValueType,2> getVertexValues() {
 		std::array<VertexValueType, 2> vertValues;
 		vertValues[0] = VTfloat3;
-		vertValues[1] = VTfloat3;
+		vertValues[1] = VTfloat2;
 		return vertValues;
 	}
 };

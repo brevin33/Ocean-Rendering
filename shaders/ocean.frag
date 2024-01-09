@@ -1,12 +1,11 @@
 #version 450
 
-layout(location = 0) in vec3 fragColor;
+layout (location = 0) in float Height;
 
-layout(location = 0) out vec4 outColor;
+layout (location = 0) out vec4 FragColor;
 
-//layout(binding = 1) uniform sampler2D texSampler;
-
-
-void main() {
-    outColor = vec4(fragColor,1);
+void main()
+{
+    float h = (Height + 16)/64.0f;
+    FragColor = vec4(h, h, h, 1.0);
 }

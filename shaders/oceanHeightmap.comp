@@ -1,0 +1,68 @@
+#version 450
+
+struct VkDrawIndexedIndirectCommand  {
+    uint    indexCount;
+    uint    instanceCount;
+    uint    firstIndex;
+    int     vertexOffset;
+    uint    firstInstance;
+};
+
+struct Fullcrums{
+    vec4 left;
+    vec4 right;
+    vec4 top;
+    vec4 bottom;
+    vec4 near;
+    vec4 far;
+};
+
+layout(binding = 0) uniform sampler2D frequencyTabel;
+layout (binding = 1, r32f) uniform readonly image2D inputImage;
+layout (binding = 2, r32f) uniform writeonly image2D outputImage;
+#define PI 3.14159265359
+#define PI_DIR (+PI)
+
+
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in; 
+
+vec2 cmul(vec2 a, vec2 b)
+{
+    vec2 r3 = a.yx;
+    vec2 r1 = b.xx;
+    vec2 R0 = a * r1;
+    vec2 r2 = b.yy;
+    vec2 R1 = r2 * r3;
+    return R0 + vec2(-R1.x, R1.y);
+}
+
+vec2 twiddle(uint k, uint p)
+{
+    // Trancendentals should always be done in highp.
+    float angle = PI_DIR * float(k) / float(p);
+    return vec2(cos(angle), sin(angle));
+}
+
+vec2 c2r_twiddle(uint i, uint p)
+{
+    vec2 w = twiddle(i, p);
+    return vec2(-w.y, w.x);
+}
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in; 
+void main()
+{
+    uvec2 i = gl_GlobalInvocationID.xy;
+    uint stride = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
+    uint offset = i.y * stride;
+    vec2 a = texture(frequencyTabel,i).rg;
+    vec2 b = texture(frequencyTabel, uvec2(stride - i.x, i.y)).rg;
+
+    b = vec2(b.x, -b.y);
+    vec2 even = a + b;
+    vec2 odd = cmul(a - b, c2r_twiddle(i.x, stride));
+
+    imageStore(outputImage , ivec2(i), vec4(even.r+odd.r,0,0,0));
+}
+

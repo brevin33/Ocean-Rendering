@@ -45,7 +45,7 @@ void main() {
 		lastFrame = currentFrame;
 		processInput(window);
 		glm::mat4 view = camera.GetViewMatrix();
-		glm::mat4 proj = glm::perspective(glm::radians(45.0f), MZ::getRenderWidth() / (float)MZ::getRenderHeight(), 0.1f, 100.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(45.0f), MZ::getRenderWidth() / (float)MZ::getRenderHeight(), 0.1f, 1000.0f);
 		proj[1][1] *= -1;
 		glm::mat4 cam[] = { view, proj };
 		MZ::updateCPUMutUniformBuffer(MZ::mainCameraBuffer, &cam, sizeof(cam), 0);

@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <limits>
+#include <random>
 #include <array>
 #include <optional>
 #include <set>

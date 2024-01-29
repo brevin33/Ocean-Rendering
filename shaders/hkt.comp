@@ -1,0 +1,89 @@
+#version 450
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in; 
+
+
+layout(binding = 0 ) uniform UniformBufferObject {
+	float t;
+};
+
+layout (binding = 1, rg32f) readonly uniform image2D hk;
+layout (binding = 2, rg32f) readonly uniform image2D hkminus;
+layout (binding = 3, rg32f) writeonly uniform image2D tilde_hkt_dy;
+layout (binding = 4, rg32f) writeonly uniform image2D tilde_hkt_dx;
+layout (binding = 5, rg32f) writeonly uniform image2D tilde_hkt_dz;
+
+
+struct complex
+{	
+	float real;
+	float im;
+};
+
+complex mul(complex c0, complex c1)
+{
+	complex c;
+	c.real = c0.real * c1.real - c0.im * c1.im;
+	c.im   = c0.real * c1.im + c0.im * c1.real;
+	return c;
+}
+
+complex add(complex c0, complex c1)
+{
+	complex c;
+	c.real = c0.real + c1.real;
+	c.im   = c0.im   + c1.im;
+	return c;
+}
+
+complex conj(complex c)
+{
+	complex c_conj = complex(c.real, -c.im);
+	
+	return c_conj;
+}
+
+
+void main(void)
+{	
+	ivec2 pixcord = ivec2(gl_GlobalInvocationID.xy);
+	int N = 256;
+	int L = 1000;
+	vec2 x = ivec2(gl_WorkGroupID.xy) - float(N)/2.0;
+	uint index = gl_NumWorkGroups.x*gl_WorkGroupID.y+gl_WorkGroupID.x;
+	vec2 k = vec2(2.0 * 3.1415926535897932384626433832795 * x.x/L, 2.0 * 3.1415926535897932384626433832795 * x.y/L);
+	ivec2 pixel_coord = ivec2(gl_LocalInvocationID.x, gl_WorkGroupID.x);
+	float magnitude = length(k);
+	if (magnitude < 0.00001) magnitude = 0.00001;
+	
+	float w = sqrt(9.81 * magnitude);
+	
+	vec2 q = imageLoad(hk, pixcord).rg; 
+	vec2 q2 = imageLoad(hkminus, pixcord).rg; 
+
+	complex fourier_amp 		= complex(q.r,q.g);
+	
+	complex fourier_amp_conj	= conj(complex(q2.r, q2.g));
+		
+	float cosinus = cos(w*t);
+	float sinus   = sin(w*t);
+		
+
+	complex exp_iwt = complex(cosinus, sinus);
+	complex exp_iwt_inv = complex(cosinus, -sinus);
+	
+
+	complex h_k_t_dy = add(mul(fourier_amp, exp_iwt), (mul(fourier_amp_conj, exp_iwt_inv)));
+	
+
+	complex dx = complex(0.0,-k.x/magnitude);
+	complex h_k_t_dx = mul(dx, h_k_t_dy);
+	
+
+	complex dy = complex(0.0,-k.y/magnitude);
+	complex h_k_t_dz = mul(dy, h_k_t_dy);
+	
+	imageStore(tilde_hkt_dy, pixcord, vec4(h_k_t_dy.real, h_k_t_dy.im,0,0));
+	imageStore(tilde_hkt_dx, pixcord, vec4(h_k_t_dx.real, h_k_t_dx.im,0,0));
+	imageStore(tilde_hkt_dz, pixcord, vec4(h_k_t_dz.real, h_k_t_dz.im,0,0));
+}

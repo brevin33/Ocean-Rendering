@@ -36,13 +36,17 @@ void main() {
 	proj[1][1] *= -1;
 	view = proj * view;
 	MZ::updateCPUMutUniformBuffer(MZ::mainCameraBuffer, &view, sizeof(glm::mat4), 0);
-	addOcean();
+	float t = 0;
+	MZ::UniformBufferID timeBuffer = MZ::createCPUMutUniformBuffer(&t, sizeof(float), sizeof(float));
+	addOcean(timeBuffer);
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		float currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		t += deltaTime;
+		MZ::updateCPUMutUniformBuffer(timeBuffer, &t, sizeof(float), 0);
 		processInput(window);
 		glm::mat4 view = camera.GetViewMatrix();
 		glm::mat4 proj = glm::perspective(glm::radians(45.0f), MZ::getRenderWidth() / (float)MZ::getRenderHeight(), 0.1f, 1000.0f);

@@ -1,0 +1,92 @@
+#version 450
+#define M_PI 3.1415926535897932384626433832795
+
+layout (local_size_x = 1, local_size_y = 1) in;
+
+layout(binding = 0 )  uniform dataBuffer1{
+	vec4 twiddlesIndices[256]; 
+};
+
+layout(binding = 1 ) uniform u {
+	int stage;
+};
+
+layout(binding = 2 ) uniform u2 {
+	int direction;
+};
+
+layout (binding = 3, rg32f) readonly uniform image2D pingpong0;
+
+layout (binding = 4, rg32f) writeonly uniform image2D pingpong1;
+
+struct complex
+{	
+	float real;
+	float im;
+};
+
+complex mul(complex c0, complex c1)
+{
+	complex c;
+	c.real = c0.real * c1.real - c0.im * c1.im;
+	c.im   = c0.real * c1.im + c0.im * c1.real;
+	return c;
+}
+
+complex add(complex c0, complex c1)
+{
+	complex c;
+	c.real = c0.real + c1.real;
+	c.im   = c0.im   + c1.im;
+	return c;
+}
+
+
+void horizontalButterflies()
+{
+	int log_2_n = 8;
+	complex H;
+	ivec2 x = ivec2(gl_WorkGroupID.xy);
+
+	vec4 data = twiddlesIndices[stage+x.x*log_2_n];
+	vec2 p_ = imageLoad(pingpong0,ivec2(data.z,x.y)).rg;
+	vec2 q_ = imageLoad(pingpong0,ivec2(data.w,x.y)).rg;
+	vec2 w_ = vec2(data.x, data.y);
+		
+	complex p = complex(p_.x,p_.y);
+	complex q = complex(q_.x,q_.y);
+	complex w = complex(w_.x,w_.y);
+		
+	H = add(p,mul(w,q));
+		
+	imageStore(pingpong1, x, vec4(H.real, H.im,0,0));
+}
+
+void verticalButterflies()
+{
+	int log_2_n = 8;
+	complex H;
+	ivec2 x = ivec2(gl_WorkGroupID.xy);
+
+	vec4 data = twiddlesIndices[stage+(x.y*log_2_n)];
+	vec2 p_ = imageLoad(pingpong0,ivec2(x.x,data.z)).rg;
+	vec2 q_ = imageLoad(pingpong0,ivec2(x.x,data.w)).rg;
+	vec2 w_ = vec2(data.x, data.y);
+		
+	complex p = complex(p_.x,p_.y);
+	complex q = complex(q_.x,q_.y);
+	complex w = complex(w_.x,w_.y);
+		
+	H = add(p,mul(w,q));
+		
+	imageStore(pingpong1, x, vec4(H.real, H.im,0,0));
+
+}
+
+void main(void)
+{
+	if(direction == 0)
+		horizontalButterflies();
+	else if(direction == 1)
+		verticalButterflies();
+}

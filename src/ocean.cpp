@@ -108,9 +108,7 @@ void ifft(TextureID freq, UniformBufferID ButterflyBuffer, TextureID temp, Compu
 		pingOrPong = !pingOrPong;
 		j--;
 	}
-	pingPong[0] = freq;
-	pingPong[1] = temp;
-	addCompute(finalShader, 256, 256, 1, 0, nullptr, 0, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, pingPong, pingPonglastFrame, 2, false);
+	addCompute(finalShader, 256, 256, 1, 0, nullptr, 0, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, &freq, pingPonglastFrame, 1, false);
 }
 
 std::array<TextureID,3> getOceanHeightmap(TextureID H0, TextureID H0minus, UniformBufferID ButterflyBuffer, UniformBufferID time) {
@@ -128,7 +126,7 @@ std::array<TextureID,3> getOceanHeightmap(TextureID H0, TextureID H0minus, Unifo
 	ComputeShaderID butterfly = createComputeShader("../../../shaders/butterflyComp.spv", 48, 3, 0, 0, 2);
 	ComputeShaderID inverse = createComputeShader("../../../shaders/InverstionAndPermComp.spv", 3, 0, 0, 0, 2);
 	ifft(dy, ButterflyBuffer, temp, butterfly, inverse);
-	return { temp, dx, dz };
+	return { dy, dx, dz };
 }
 
 uint32_t reverseBits(uint32_t num, uint32_t bits) {

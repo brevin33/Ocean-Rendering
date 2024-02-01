@@ -5,9 +5,9 @@ using namespace MZ;
 std::array<UniformBufferID,8> bufferNums;
 
 void makePlane(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
-	int res = 10;
-	int width = 50;
-	int height = 50;
+	int res = 200;
+	int width = 10000;
+	int height = 10000;
 
 	for (int i = -height; i < height; i += (height * 2) / res)
 	{
@@ -15,7 +15,7 @@ void makePlane(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
 		{
 			Vertex v;
 			v.pos = glm::vec3(i, 0, j);
-			v.uv = glm::vec2((i + height) / (float)(height * 2), (j + width) / (float)(width * 2));
+			v.uv = glm::vec2(((i + height) / (float)(height * 2)) * 100, ((j + width) / (float)(width * 2)) * 100);
 			vertices.push_back(v);
 		}
 	}

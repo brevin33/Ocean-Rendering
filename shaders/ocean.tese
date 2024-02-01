@@ -2,6 +2,8 @@
 layout(quads, fractional_odd_spacing, ccw) in;
 
 layout(binding = 2) uniform sampler2D heightMap;
+layout(binding = 3) uniform sampler2D xMap;
+layout(binding = 4) uniform sampler2D zMap;
 layout(binding = 1) uniform m{mat4 model;}myModel;
 layout(binding = 0) uniform c{ mat4 view; mat4 projection;} camera;
 
@@ -23,7 +25,7 @@ void main()
     vec2 t1 = (t11 - t10) * u + t10;
     vec2 texCoord = (t1 - t0) * v + t0;
 
-    Height = texture(heightMap, texCoord).r * 0.1;
+    Height = texture(heightMap, texCoord).r * 0.03;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;
@@ -37,6 +39,8 @@ void main()
     vec4 p0 = (p01 - p00) * u + p00;
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 p = (p1 - p0) * v + p0 + normal * Height;
+    p.x = p.x - texture(xMap, texCoord).r * 0.01;
+    p.z = p.z - texture(zMap, texCoord).r * 0.01;
 
     gl_Position = camera.projection * camera.view * myModel.model * p;
 }

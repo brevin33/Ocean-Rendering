@@ -6,9 +6,8 @@ std::array<UniformBufferID,8> bufferNums;
 
 void makePlane(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
 	int res = 10;
-	int width = 100;
-	int height = 100;
-	std::array<std::array<int, 2>, 4> quad;
+	int width = 50;
+	int height = 50;
 
 	for (int i = -height; i < height; i += (height * 2) / res)
 	{
@@ -123,9 +122,13 @@ std::array<TextureID,3> getOceanHeightmap(TextureID H0, TextureID H0minus, Unifo
 	bool texterLastFrame[] = {false, false, false, false, false};
 	addCompute(hkt, 256, 256, 1, 18, &time, 1, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, nullptr, nullptr, 0, textureIDs, texterLastFrame, 5, false);
 	TextureID temp = createGPUMutTexture(256, 256, IFFloat2);
+	TextureID temp2 = createGPUMutTexture(256, 256, IFFloat2);
+	TextureID temp3 = createGPUMutTexture(256, 256, IFFloat2);
 	ComputeShaderID butterfly = createComputeShader("../../../shaders/butterflyComp.spv", 48, 3, 0, 0, 2);
 	ComputeShaderID inverse = createComputeShader("../../../shaders/InverstionAndPermComp.spv", 3, 0, 0, 0, 2);
 	ifft(dy, ButterflyBuffer, temp, butterfly, inverse);
+	ifft(dx, ButterflyBuffer, temp2, butterfly, inverse);
+	ifft(dz, ButterflyBuffer, temp3, butterfly, inverse);
 	return { dy, dx, dz };
 }
 
@@ -184,20 +187,21 @@ UniformBufferID makeButterflyTexture() {
 void addOcean(UniformBufferID t) {
 	std::vector<Vertex> plane;
 	std::vector<uint32_t> indices;
-	UniformBufferID a = makeButterflyTexture();
-	//TextureID hightMap = createConstTexture("../../../include/dep/MesmerizeRenderer/textures/iceland_heightmap.png");
+	std::vector<Vertex> plane2;
+	std::vector<uint32_t> indices2;
+	UniformBufferID butterfly = makeButterflyTexture();
 	std::array<TextureID,2> freq = createOceanFrequencyTexture(10, 9.8);
 	makePlane(plane, indices);
-	std::array<TextureID, 3> hightMap = getOceanHeightmap(freq[0], freq[1], a, t);
+	std::array<TextureID, 3> hightMap = getOceanHeightmap(freq[0], freq[1], butterfly, t);
 	VertexBufferID planeVertexBuffer = createConstVertexBuffer(plane.data(), plane.size(), plane.size() * sizeof(Vertex));
 	IndexBufferID planeIndexBuffer = createConstIndexBuffer(indices.data(), indices.size() * sizeof(uint32_t));
 	ShaderStages stages[2] = { SSTessCon | SSTessEval, SSTessCon | SSTessEval };
-	ShaderStages stagesTexture[1] = { SSTessEval };
+	ShaderStages stagesTexture[3] = { SSTessEval, SSTessEval, SSTessEval };
 	ShaderID tessShader = createShader("../../../shaders/oceanVert.spv", "../../../shaders/oceanFrag.spv", "../../../shaders/oceanTesc.spv",
-		"../../../shaders/oceanTese.spv", 1, stagesTexture, 1, stages, 2, Vertex::getVertexValues().data(), Vertex::getVertexValues().size(), nullptr, 0, FrontCull);
+		"../../../shaders/oceanTese.spv", 1, stagesTexture, 3, stages, 2, Vertex::getVertexValues().data(), Vertex::getVertexValues().size(), nullptr, 0, FrontCull);
 	glm::mat4 model = glm::mat4(1);
 	UniformBufferID modelBuffer = createCPUMutUniformBuffer(&model, sizeof(glm::mat4), sizeof(glm::mat4));
 	std::array<UniformBufferID, 2> tessUniformBuffers = { mainCameraBuffer , modelBuffer };
-	MaterialID tessMaterial = createMaterial(tessShader, &hightMap[0], 1, tessUniformBuffers.data(), tessUniformBuffers.size());
+	MaterialID tessMaterial = createMaterial(tessShader, hightMap.data(), 3, tessUniformBuffers.data(), tessUniformBuffers.size());
 	RenderObjectID terrain = addRenderObject(tessMaterial, planeVertexBuffer, planeIndexBuffer);
 }

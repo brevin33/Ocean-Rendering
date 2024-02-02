@@ -4,6 +4,9 @@
 #include <Mesmerize/Defaults.h>
 #include <ocean.h>
 #include <camera.h>
+#define STB_IMAGE_STATIC
+#include "stb_image.h"
+
 constexpr int WIDTH = 1920;
 constexpr int HEIGHT = 1080;
 
@@ -38,7 +41,37 @@ void main() {
 	MZ::updateCPUMutUniformBuffer(MZ::mainCameraBuffer, &view, sizeof(glm::mat4), 0);
 	float t = 0;
 	MZ::UniformBufferID timeBuffer = MZ::createCPUMutUniformBuffer(&t, sizeof(float), sizeof(float));
+
+	// load cubemap data
+	std::vector<stbi_uc> cubemapData;
+	int texWidth, texHeight, texChannels;
+	stbi_uc* pixels = stbi_load("../../../textures/skybox/Daylight Box_Right.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+	pixels = stbi_load("../../../textures/skybox/Daylight Box_Left.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+	pixels = stbi_load("../../../textures/skybox/Daylight Box_Top.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+	pixels = stbi_load("../../../textures/skybox/Daylight Box_Bottom.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+	pixels = stbi_load("../../../textures/skybox/Daylight Box_Front.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+	pixels = stbi_load("../../../textures/skybox/Daylight Box_Back.bmp", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+	cubemapData.insert(cubemapData.end(), pixels, pixels + (texHeight * texWidth * 4));
+	stbi_image_free(pixels);
+
+	MZ::TextureID cubemap = MZ::createConstTexture(cubemapData.data(), texWidth, texHeight, MZ::IFSRGBA8, true);
+
+	MZ::setSkybox(cubemap);
+
 	addOcean(timeBuffer);
+
+
+
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();

@@ -5,7 +5,7 @@ using namespace MZ;
 std::array<UniformBufferID,8> bufferNums;
 
 void makePlane(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices) {
-	int res = 200;
+	int res = 100;
 	int width = 10000;
 	int height = 10000;
 
@@ -81,7 +81,7 @@ std::array<TextureID,2> createOceanFrequencyTexture(float windSpeed, float gravi
 		}
 	}
 
-	return { createGPUMutTexture(imageData.data(), res, res, IFFloat2),  createGPUMutTexture(imageData2.data(), res, res, IFFloat2)};
+	return { createGPUMutTexture(imageData.data(), res, res, IFFloat2, false),  createGPUMutTexture(imageData2.data(), res, res, IFFloat2, false)};
 }
 
 

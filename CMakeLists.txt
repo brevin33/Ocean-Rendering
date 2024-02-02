@@ -19,7 +19,7 @@ find_package(imgui CONFIG REQUIRED)
 add_subdirectory(include/dep/MesmerizeRenderer)
 
 
-add_executable(OceanRendering "src/main.cpp" "include/vertex.h" "src/ocean.cpp" "include/ocean.h" "include/camera.h")
+add_executable(OceanRendering "src/main.cpp" "include/vertex.h" "src/ocean.cpp" "include/ocean.h" "include/camera.h" "include/stb_image.h")
 
 target_include_directories(OceanRendering PUBLIC include/private)
 target_include_directories(OceanRendering PUBLIC include)
